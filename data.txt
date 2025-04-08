@@ -1,0 +1,6 @@
+{
+  "studentId": "1",
+  "name": "nana",
+  "class": "Devops",
+  "age": "27"
+}
