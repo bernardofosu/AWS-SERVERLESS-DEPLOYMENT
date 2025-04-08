@@ -52,3 +52,67 @@ You've got the right idea — that combo is like building a fully serverless Exp
 ## ⚡ Bonus: Want to make it even more like Express?
 
 Use the `aws-serverless-express` package to literally run an Express app inside a Lambda function. That’s more advanced, but it works!
+
+
+# Understanding CORS in API Gateway
+
+You're diving into CORS, which is super important when your frontend (like an S3-hosted site) is calling your API Gateway endpoints from a different domain.
+
+## 🎯 What is the purpose of “Enable CORS” in API Gateway?
+
+CORS (Cross-Origin Resource Sharing) is a browser security feature that restricts frontend JavaScript (running in one domain) from calling APIs on another domain — unless the server says it’s allowed.
+
+When your frontend (hosted on S3 or anywhere else) calls API Gateway, the browser checks:
+
+- “Hey, is this API allowed to be called from this origin (domain)?”
+
+If you didn’t configure CORS, the browser blocks the request, even though the Lambda works perfectly fine in Postman or `curl`.
+
+## ✅ What does "Enable CORS" do in API Gateway?
+
+When you click “Enable CORS,” API Gateway automatically does the following:
+
+- **Adds required headers to responses:**
+  - `Access-Control-Allow-Origin: *` (or a specific domain like `https://your-frontend.com`)
+  - `Access-Control-Allow-Methods: GET, POST, OPTIONS`
+  - `Access-Control-Allow-Headers: Content-Type` (and more, depending on your needs)
+
+- **Adds an OPTIONS method to your resource** (this is a preflight request).
+  - This is how the browser checks if it’s safe to call your endpoint.
+
+- **Configures gateway responses** (like 4XX, 5XX) to include CORS headers too, so errors still respond with CORS headers.
+
+## 🛠 Example Setup
+
+Let’s say you have an API Gateway resource `/student` and you enable CORS.
+
+It will:
+
+- Add `OPTIONS /student`
+- Set headers like:
+  - `Access-Control-Allow-Origin: *`
+  - `Access-Control-Allow-Methods: GET, POST, OPTIONS`
+  - `Access-Control-Allow-Headers: Content-Type`
+
+Then, from your browser frontend, you can safely do:
+
+```javascript
+fetch("https://abc123xyz.execute-api.us-east-1.amazonaws.com/prod/student", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({ /* your data here */ })
+})
+Without CORS, the browser would block this.
+
+💡 Pro Tip: When should I use "*" vs specific origin?
+"*" allows any site to access your API (open for public APIs).
+"https://my-frontend.com" is better for security (if only your S3 site should access it).
+```
+
+Without CORS, the browser would block this.
+
+💡 Pro Tip: When should I use "*" vs specific origin?
+"*" allows any site to access your API (open for public APIs).
+"https://my-frontend.com" is better for security (if only your S3 site should access it).
